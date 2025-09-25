@@ -4,12 +4,25 @@
              xmlns:vm="clr-namespace:Grocery.App.ViewModels"
              x:Class="Grocery.App.Views.LoginView"
              x:DataType="vm:LoginViewModel"
-             Title="LoginView">
-    <StackLayout Padding="20" VerticalOptions="Center">
-        <Label Text="Login" FontSize="24" HorizontalOptions="Center" />
-        <Entry Placeholder="Email" Text="{Binding Email}" Keyboard="Email" />
-        <Entry Placeholder="Password" Text="{Binding Password}" IsPassword="True" />
-        <Button Text="Login" Command="{Binding LoginCommand}" />
-        <Label Text="{Binding LoginMessage}" TextColor="Red" />
-    </StackLayout>
+             Title="Login">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16" VerticalOptions="Center">
+            
+            <Label Text="Login" FontSize="22" HorizontalOptions="Center" />
+            <Entry Placeholder="Email" Text="{Binding Email}" Keyboard="Email" />
+            <Entry Placeholder="Password" Text="{Binding Password}" IsPassword="True" />
+            <Button Text="Login" Command="{Binding LoginCommand}" />
+            <Label Text="{Binding LoginMessage}" TextColor="Red" />
+            
+            <BoxView HeightRequest="1" Opacity="0.2" Margin="0,12" />
+            
+            <Label Text="Register" FontSize="22" HorizontalOptions="Center" />
+            <Entry Placeholder="Email" Text="{Binding RegisterEmail}" Keyboard="Email" />
+            <Entry Placeholder="Password" Text="{Binding RegisterPassword}" IsPassword="True" />
+            <Button Text="Register" Command="{Binding RegisterCommand}" />
+            <Label Text="{Binding RegisterMessage}" TextColor="Red" />
+
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>
