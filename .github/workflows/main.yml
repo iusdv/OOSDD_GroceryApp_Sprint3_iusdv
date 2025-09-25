@@ -1,0 +1,46 @@
+name: MAUI Unit Tests
+
+on:
+  push:
+    branches: [ main, developer, 'feature/*', 'hotfix/*', 'infra/runner-toevoegen' ]
+  pull_request:
+    branches: [ main, developer, 'feature/*', 'hotfix/*' ]
+
+jobs:
+  test:
+    runs-on: windows-latest
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+      DOTNET_NOLOGO: 1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+ 
+      - name: Restore workloads (fallback to install on failure)
+        shell: pwsh
+        run: |
+          dotnet workload restore || dotnet workload install maui
+
+      - name: Restore NuGet
+        run: dotnet restore
+
+   
+      - name: Build tests only
+        shell: pwsh
+        run: |
+          Get-ChildItem -Recurse -Filter *Tests*.csproj |
+            ForEach-Object { dotnet build $_.FullName -c Release --no-restore }
+
+      - name: Run unit tests
+        shell: pwsh
+        run: |
+          Get-ChildItem -Recurse -Filter *Tests*.csproj |
+            ForEach-Object { dotnet test $_.FullName -c Release --no-build --verbosity normal }
