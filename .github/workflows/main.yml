@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - develop
+      - developer
       - release
       - feature/*
       - hotfix/*
@@ -13,7 +13,7 @@ on:
     branches:
       - main
       - release
-      - develop
+      - developer
       - feature/*
       - hotfix/*
  
