@@ -6,6 +6,7 @@ using Grocery.Core.Interfaces.Services;
 using Grocery.Core.Models;
 using System.Collections.ObjectModel;
 using System.Text.Json;
+using System.Linq;
 
 namespace Grocery.App.ViewModels
 {
@@ -15,16 +16,20 @@ namespace Grocery.App.ViewModels
         private readonly IGroceryListItemsService _groceryListItemsService;
         private readonly IProductService _productService;
         private readonly IFileSaverService _fileSaverService;
-        
+
         public ObservableCollection<GroceryListItem> MyGroceryListItems { get; set; } = [];
         public ObservableCollection<Product> AvailableProducts { get; set; } = [];
+        public ObservableCollection<Product> FilteredProducts { get; set; } = [];
 
         [ObservableProperty]
         GroceryList groceryList = new(0, "None", DateOnly.MinValue, "", 0);
+
         [ObservableProperty]
         string myMessage;
 
-        public GroceryListItemsViewModel(IGroceryListItemsService groceryListItemsService, IProductService productService, IFileSaverService fileSaverService)
+        public GroceryListItemsViewModel(IGroceryListItemsService groceryListItemsService,
+                                         IProductService productService,
+                                         IFileSaverService fileSaverService)
         {
             _groceryListItemsService = groceryListItemsService;
             _productService = productService;
@@ -35,16 +40,26 @@ namespace Grocery.App.ViewModels
         private void Load(int id)
         {
             MyGroceryListItems.Clear();
-            foreach (var item in _groceryListItemsService.GetAllOnGroceryListId(id)) MyGroceryListItems.Add(item);
+            foreach (var item in _groceryListItemsService.GetAllOnGroceryListId(id))
+                MyGroceryListItems.Add(item);
+
             GetAvailableProducts();
         }
 
         private void GetAvailableProducts()
         {
             AvailableProducts.Clear();
+            FilteredProducts.Clear();
+
             foreach (Product p in _productService.GetAll())
-                if (MyGroceryListItems.FirstOrDefault(g => g.ProductId == p.Id) == null  && p.Stock > 0)
+            {
+                if (MyGroceryListItems.FirstOrDefault(g => g.ProductId == p.Id) == null && p.Stock > 0)
+                {
                     AvailableProducts.Add(p);
+                
+                    FilteredProducts.Add(p);
+                }
+            }
         }
 
         partial void OnGroceryListChanged(GroceryList value)
@@ -55,25 +70,54 @@ namespace Grocery.App.ViewModels
         [RelayCommand]
         public async Task ChangeColor()
         {
-            Dictionary<string, object> paramater = new() { { nameof(GroceryList), GroceryList } };
+            Dictionary<string, object> paramater = new()
+            {
+                { nameof(GroceryList), GroceryList }
+            };
             await Shell.Current.GoToAsync($"{nameof(ChangeColorView)}?Name={GroceryList.Name}", true, paramater);
         }
+
         [RelayCommand]
         public void AddProduct(Product product)
         {
             if (product == null) return;
+
             GroceryListItem item = new(0, GroceryList.Id, product.Id, 1);
             _groceryListItemsService.Add(item);
+
             product.Stock--;
             _productService.Update(product);
+            
             AvailableProducts.Remove(product);
+            FilteredProducts.Remove(product);
+            
             OnGroceryListChanged(GroceryList);
+        }
+        
+        [RelayCommand]
+        public void SearchProducts(string? term)
+        {
+            if (term is null) term = string.Empty;
+            var query = term.Trim();
+
+            IEnumerable<Product> source = AvailableProducts;
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                source = AvailableProducts.Where(p =>
+                    p.Name.Contains(query, StringComparison.OrdinalIgnoreCase));
+            }
+
+            FilteredProducts.Clear();
+            foreach (var p in source)
+                FilteredProducts.Add(p);
         }
 
         [RelayCommand]
         public async Task ShareGroceryList(CancellationToken cancellationToken)
         {
             if (GroceryList == null || MyGroceryListItems == null) return;
+
             string jsonString = JsonSerializer.Serialize(MyGroceryListItems);
             try
             {
@@ -85,6 +129,5 @@ namespace Grocery.App.ViewModels
                 await Toast.Make($"Opslaan mislukt: {ex.Message}").Show(cancellationToken);
             }
         }
-
     }
 }
