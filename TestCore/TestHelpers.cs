@@ -8,8 +8,6 @@ namespace TestCore
         public void Setup()
         {
         }
-
-
         //Happy flow
         [Test]
         public void TestPasswordHelperReturnsTrue()
@@ -31,14 +29,19 @@ namespace TestCore
         [Test]
         public void TestPasswordHelperReturnsFalse()
         {
-            Assert.Pass(); //Zelf uitwerken
+          
+            string wrongPassword = "wrongPassword";
+            string correctHash = "sxnIcZdYt8wC8MYWcQVQjQ==.FKd5Z/jwxPv3a63lX+uvQ0+P7EuNYZybvkmdhbnkIHA=";
+
+            Assert.IsFalse(PasswordHelper.VerifyPassword(wrongPassword, correctHash));
         }
 
-        [TestCase("user1", "IunRhDKa+fWo8+4/Qfj7Pg==.kDxZnUQHCZun6gLIE6d9oeULLRIuRmxmH2QKJv2IM08")]
-        [TestCase("user3", "sxnIcZdYt8wC8MYWcQVQjQ==.FKd5Z/jwxPv3a63lX+uvQ0+P7EuNYZybvkmdhbnkIHA")]
-        public void TestPasswordHelperReturnsFalse(string password, string passwordHash)
+        [TestCase("user1", "IunRhDKa+fWo8+4/Qfj7Pg==.kDxZnUQHCZun6gLIE6d9oeULLRIuRmxmH2QKJv2IM08")] // Not valid Base64
+        [TestCase("user3", "sxnIcZdYt8wC8MYWcQVQjQ==.FKd5Z/jwxPv3a63lX+uvQ0+P7EuNYZybvkmdhbnkIHA")]   // Not valid Base64
+        public void TestPasswordHelperThrowsOnInvalidHash(string password, string passwordHash)
         {
-            Assert.Fail(); //Zelf uitwerken zodat de test slaagt!
+            Assert.Throws<FormatException>(() =>
+                PasswordHelper.VerifyPassword(password, passwordHash));
         }
     }
 }
